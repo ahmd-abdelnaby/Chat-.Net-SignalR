@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+
+    <body>
+        <button id="show-all-connections">Show Connections</button>
+        <ul id="user-list">
+        </ul>
+
+        @*<div class="container text-center row">
+            <input style="width:100%" type="text" id="msg" />
+            <input type="button" id="Send" value="GO!" />
+            <div style="list-style-type:none;padding-right:260px;" id="chatText"></div>
+        </div>*@
+
+        <div class="mesgs">
+            <div id="msg_history" class="msg_history">
+                
+            </div>
+            <div class="type_msg">
+                <div class="input_msg_write">
+                    <input id="input_msg_write" type="text" class="write_msg" placeholder="Type a message" />
+                    <button id="msg_send_btn" class="msg_send_btn" type="button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="online">
+            <ul id="list-group" class="list-group">
+                <li class="list-group-item active">Online Connections</li>
+            </ul>
+        </div>
+        <script src="Scripts/jquery-3.4.1.min.js"></script>
+        <script src="Scripts/jquery.signalR-2.4.1.min.js"></script>
+        <script src="/signalr/js"></script>
+        <script>
+            var proxy = $.connection.ChatHub;
+            var b = false;
+
+            proxy.client.writeMessage = function (message, name, dd, month) {
+                if (b == false) {
+                    $("#msg_history").append("<div class='incoming_msg'>" +
+                        "<div class='incoming_msg_img'> <img src='https://ptetutorials.com/images/user-profile.png' alt='sunil'> </div>" +
+                        "<div class='received_msg'>" +
+                        "<div class='received_withd_msg'>" +
+                        "<p>" + message + " </p > " +
+                        "<span class=-time_date->" + dd + "    |    " + name +" </span>" +
+                        "</div>" +
+                        "</div>" +
+                        "</div>")
+
+                    //$("#chatText").append("<li style='padding-left:400px'>" + name + ":" + message + "</li>"
+                    //    + "<li style='padding-left:400px'>" + dd + "</li>");
+                    b = true;
+                }
+                else {
+
+
+                    $("#msg_history").append("<div class='outgoing_msg'>" +
+                        "<div class='sent_msg'>" +
+                        "<p>" + message + "</p>" +
+                        "<span class='time_date'> " + dd + " | "+name+" </span > " +
+                        "</div >" +
+                        " </div>");
+
+                    //$("#chatText").append("<li>" + name + ":" + message + "</li>" + dd);
+                    b = false;
+                }
+
+
+            }
+            proxy.client.NewConnection = function (name) {
+
+                $("#list-group").append("<li class='list-group-item'>" + name + "</li > ");
+            }
+            proxy.client.DisConnection = function (name) {
+                $('#list-group > li:contains(' + name + ')').remove();
+            }
+            $("#show-all-connections").on("click", function () {
+
+                proxy.server.getAllActiveConnections().done(function (connections) {
+                    $.map(connections, function (item) {
+                        $("#user-list").append("<li>" + item + "</li>");
+                    });
+                });
+            });
+            $.connection.hub.start()
+                .done(function () {
+                    console.log("Connection Success")
+
+                    $("#msg_send_btn").click(function () {
+                        var msg = $("#input_msg_write").val();
+                        proxy.server.SendNewMessage(msg);
+                        $("#input_msg_write").val("");
+                    });
+
+                })
+                .fail(function () { console.log("Connection Fail") });
+
+
+        </script>
+    </body>
